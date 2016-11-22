@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html>
+  <head>
+      <style>
+          body {
+              background-color: greenyellow;
+          }
+          h1 {
+              font-family: Lucida Console;
+          }
+          
+          p {
+              font-family: Lucida Console;
+          }
+          .principal{ 
+              float: left;
+              width: 800;
+              height: 450;
+              margin: 0px 0px 0px 250px;
+          }
+          .llista{
+              float:right;
+              width: 100px;
+              height: 450;
+              margin: 0px 250px 0px 0px;
+              
+          }
+      </style>
+    <title>WebSocket Chat Client</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+    <script type="text/javascript" src="prototype.js"></script>
+    <script type="text/javascript" src="jlist.js"></script>
+    <script type="text/javascript">
+        
+        //Aquí comença la implementació de la llista
+            var llista = "Usuaris: ";
+            llista = jList.listChangeDelims(llista, '\n');
+
+        //Aquí comença la implementació de WebSockets
+        document.observe("dom:loaded", function() {
+            
+            function log(text) {
+                $("xat").innerHTML = (!Object.isUndefined(text) && text !== null ? text.escapeHTML() : "null") + $("xat").innerHTML;
+            }
+            
+            if (!window.WebSocket) {
+                alert("FATAL: WebSocket not natively supported. This demo will not work!");
+            }
+            
+            var ws;
+            $("nomUsuari").observe("submit", function(e) {
+                var nomUsuari = document.getElementById("nomUsuariBox").value;
+                e.stop();
+                ws = new WebSocket("ws://localhost:50000");
+                $("xat").style.display="inline";
+                $("llistaUsuaris").style.display="inline";
+                $("nomUsuari").style.display="none";
+                $("connect").style.display="none";
+                $("enviar").style.display="inline";
+                $("txtBox").style.display="inline";
+                $("benvinguda").style.display="none";
+                $("instruccions").style.display="inline";
+                $("instruccions").style.textAlign="center";
+                
+                ws.onopen = function(e, nomUsuari) {
+                    var nomUsuari = document.getElementById("nomUsuariBox").value;
+                    ws.send("/newuser " +  nomUsuari);
+                    log("Benvingut a la sala \n ");
+                }
+                
+                ws.onmessage = function(e) {
+                    var str = e.data;
+                    if(str.includes("/newuser ")){
+                        var talls = str.split(" ");
+                        llista = jList.listAppend(llista, talls[1]);
+                        llista = jList.listChangeDelims(llista, '\n');
+                        document.getElementById("llistaUsuaris").value = llista;
+                    } else if(str.includes("/deleteuser ")) {
+                        var talls = str.split(" ");
+                        var llista2 = talls[1] + "\n";
+                        llista = jList.listRemove(llista, llista2, "\n");
+                        
+                        document.getElementById("llistaUsuaris").value = llista;
+                    }else{
+                        log(e.data + "\n");	                
+                    }
+                    
+                }
+                
+                ws.onclose = function() {
+                    log("Has abandonat la sala\n");
+                    ws = null;
+                }
+            });
+            $("enviarText").observe("submit", function(e) {
+                var nomUsuari = document.getElementById("nomUsuariBox").value;
+                e.stop();
+                if (ws) {
+                    var txtBox = $("txtBox");
+                    ws.send(nomUsuari + ": " + txtBox.value);
+                    txtBox.value = "";
+                    txtBox.focus();
+                }
+            });
+            
+        });
+    </script>
+  </head>
+    
+  <body style="text-align:center">
+      
+        <h1>Benvingut al Xat desenvolupat a PAD</h1>
+        <p id="benvinguda">Introdueix el teu nom d'usuari:</p>
+        <p style="display:none;" id="instruccions">Introdueix el text que vulguis enviar:</p>
+      
+        <form id="nomUsuari">
+          
+          <input type="text" id="nomUsuariBox" value="" style="width:100px;"> 
+          <input type="submit" id="connect" value="Xateja">
+          
+        </form>
+        <form id="enviarText">
+          
+          <input style="display:none" type="text" id="txtBox" value="" style="width:100px;"> 
+          <input style="display:none" type="submit" id="enviar" value="Enviar">
+          
+        </form>
+      
+        <br>
+        <div class="principal">
+        <form id="textArea">
+          
+          <textarea style="display:none" id="xat" rows="30" cols="100" style="font-family:monospace; color:red;"></textarea>
+        </form>
+      </div>
+      
+      <div class="llista">
+          <textarea style="display:none" id="llistaUsuaris" rows="30" cols="10" style="font-family:monospace; color:red;"></textarea>
+      </div>
+      <br>
+  </body>
+</html>
