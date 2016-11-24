@@ -40,6 +40,29 @@ public class ChatServer extends WebSocketServer {
         super(address);
     }
     
+    
+    public static void main(String[] args) throws InterruptedException, IOException {
+
+        int port = 50000; // 843 flash policy port
+        
+        // Inicialitzem el servidor
+        ChatServer s = new ChatServer(port);
+        s.start();
+        
+        System.out.println("Hem iniciat el servidor en el port: " + s.getPort());
+    }
+    
+    
+    // Envia un missatge a tots els clients
+    public void sendToAll(String text) {
+        Collection<WebSocket> con = connections();
+        synchronized (con) {
+            for (WebSocket c : con) {
+                c.send(text);
+            }
+        }
+    }
+    
     public void onOpen(WebSocket conn, ClientHandshake handshake) {
         
         // Quan s'obre una connexió iterem el HashMap i enviem a tots els usuaris existents
@@ -81,37 +104,10 @@ public class ChatServer extends WebSocketServer {
         System.out.println(message);
     }
 
-    public static void main(String[] args) throws InterruptedException, IOException {
-
-        int port = 50000; // 843 flash policy port
-        
-        // Inicialitzem el servidor
-        ChatServer s = new ChatServer(port);
-        s.start();
-        
-        System.out.println("Hem iniciat el servidor en el port: " + s.getPort());
-    }
-
-    @Override
     public void onError(WebSocket conn, Exception ex) {
         ex.printStackTrace();
         if (conn != null) {
             // some errors like port binding failed may not be assignable to a specific websocket
-        }
-    }
-
-    /**
-     * Sends <var>text</var> to all currently connected WebSocket clients.
-     *
-     * @param text The String to send across the network.
-     * @throws InterruptedException When socket related I/O errors occur.
-     */
-    public void sendToAll(String text) {
-        Collection<WebSocket> con = connections();
-        synchronized (con) {
-            for (WebSocket c : con) {
-                c.send(text);
-            }
         }
     }
 }
