@@ -1,179 +1,36 @@
 <!DOCTYPE html>
 <html>
   <head>
-      <!-- Inici del codi CSS -->
-      <style>
-          /* CSS Inline
-          * Donat que no necessito molt de codi CSS opto per utilitzar-lo de forma "inline" o 
-          * directament a dins del codi.
-          * Una altra alternativa seria posar-lo en un arxiu .css i importarlo de tal manera com:
-          * <link rel="stylesheet" type="text/css" href="elmeufitxer.css"> */
-          body { background-color: greenyellow; }
-          h1 { font-family: Lucida Console; }
-          p { font-family: Lucida Console; } 
-          .principal { 
-              float: left;
-              width: 800;
-              height: 450;
-              margin: 0px 0px 0px 250px;
-          }
-          .llista {
-              float:right;
-              width: 100px;
-              height: 450;
-              margin: 0px 250px 0px 0px;
-          }
-      </style>
-      <!-- Fi del codi CSS -->
+      <title>WebSocket Chat Client</title>
       
-    <title>WebSocket Chat Client</title>
-      
-    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-    
-    <!-- Import del prototype.js que implementa diverses 
-    funcions necessàries per tal que funcionin els WebSockets -->
-    <script type="text/javascript" src="prototype.js"></script>
-    <!-- Import del jlist.js que és una llibreria que permer traballar amb Llistes com si ho féssim a Java 
-    Més informació: http://davidwaterston.github.io/jList/ -->
-    <script type="text/javascript" src="jlist.js"></script>
-    <!-- Inici del codi Javascript -->
-    <script type="text/javascript">
-        
-        //Aquí comença la implementació de la llista
-            var llista = "Usuaris: ";
-            llista = jList.listChangeDelims(llista, '\n');
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+      <script type="text/javascript" src="jquery.js"></script>
+      <script type="text/javascript" src="xat.js"></script>
+      <script type="text/javascript" src="list.js"></script>
+      <link rel="stylesheet" type="text/css" href="style.css">
 
-        //Aquí comença la implementació de WebSockets
-        document.observe("dom:loaded", function() {
-
-            // Afegeix el missatge al text area prinipal.
-            function log(text) {
-                $("xat").innerHTML = (!Object.isUndefined(text) && text !== null ? text.escapeHTML() : "null") + $("xat").innerHTML;
-            }
-            
-            if (!window.WebSocket) {
-                alert("FATAL ERROR: Els WebSocket no estan suportats. Aquesta pàgina no funcionarà!");
-            }
-            
-            var ws;
-
-            $("nomUsuari").observe("submit", function(e) {
-
-                ws = new WebSocket("ws://localhost:50000"); // Inicialitzo el WebSocket
-                e.stop();
-                var nomUsuari = document.getElementById("nomUsuariBox").value;
-
-                // Afegeixo dinamisme a la pàgina
-                $("xat").style.display="inline";
-                $("llistaUsuaris").style.display="inline";
-                $("nomUsuari").style.display="none";
-                $("connect").style.display="none";
-                $("enviar").style.display="inline";
-                $("txtBox").style.display="inline";
-                $("benvinguda").style.display="none";
-                $("instruccions").style.display="inline";
-                $("instruccions").style.textAlign="center";
-
-                // Accions que es duen a terme quan s'obre una connexió
-                ws.onopen = function(e, nomUsuari) {
-
-                    var nomUsuari = document.getElementById("nomUsuariBox").value;
-                    ws.send("/newuser " +  nomUsuari);
-                    log("Benvingut a la sala \n");
-
-                }
-
-                // Accions que es duen a terme cada com que arriba un missatge
-                ws.onmessage = function(e) {
-
-                    var str = e.data;
-
-                    if(str.includes("/newuser ")){
-
-                        var talls = str.split(" ");
-                        llista = jList.listAppend(llista, talls[1]);
-                        llista = jList.listChangeDelims(llista, '\n');
-                        document.getElementById("llistaUsuaris").value = llista;
-
-                    } else if(str.includes("/deleteuser ")) {
-
-                        var talls = str.split(" ");
-                        var llista2 = talls[1] + "\n";
-                        llista = jList.listRemove(llista, llista2, "\n");
-                        document.getElementById("llistaUsuaris").value = llista;
-
-                    }else{
-
-                        log(str + "\n");
-                    }
-                    
-                }
-
-                // Acció que es du a terme quan es tanca la connexió
-                ws.onclose = function() {
-
-                    log("Has abandonat la sala \n");
-                    ws = null;
-
-                }
-            });
-
-            $("enviarText").observe("submit", function(e) {
-
-                var nomUsuari = document.getElementById("nomUsuariBox").value;
-                if (ws) {
-                    e.stop();
-                    var txtBox = $("txtBox");
-                    ws.send(nomUsuari + ": " + txtBox.value);
-                    txtBox.value = "";
-                    txtBox.focus();
-
-                }
-            });
-            
-        });
-    </script>
   </head>
     
   <body style="text-align:center">
       
-        <h1>Benvingut al Xat desenvolupat a PAD</h1>
-        <!-- Inicialitzo un amb display:none per tal que sigui invisible, i quan s'apreta el botó Xateja
-        els canvio la visibilitat -->
-        <p id="benvinguda">Introdueix el teu nom d'usuari:</p>
-        <p style="display:none;" id="instruccions">Introdueix el text que vulguis enviar:</p>
+        <h1>Welcome to the ChatClient implementing WebSockets</h1>
+        <p id="benvinguda">Introduce your username:</p>
+        <p style="display:none;" id="instruccions">Introduce the text you want to send:</p>
 
-        <!-- Formulari per introduïr el nom d'usuari i inicialitzar el WebSocket -->
         <form id="nomUsuari">
-          
-          <input type="text" id="nomUsuariBox" value="" style="width:100px;"> 
-          <input type="submit" id="connect" value="Xateja">
-          
+          <input type="text" id="nomUsuariBox" value="" style="width:200px;"> 
+          <input type="submit" id="connect" value="Chat">
         </form>
-
-        <!-- Formulari per introduïr els missatges que volem enviar -->
         <form id="enviarText">
-          
-          <input style="display:none" type="text" id="txtBox" value="" style="width:100px;"> 
-          <input style="display:none" type="submit" id="enviar" value="Enviar">
-          
+          <input autocomplete="off" style="display:none; width: 200px" type="text" id="txtBox" value=""> 
+          <input autocomplete="off" style="display:none;" type="submit" id="enviar" value="Send">
         </form>
-      
         <br>
-
-        <!-- TextArea Prinipal, on arriben els missatges -->
-        <div class="principal">
-            <form id="textArea">
-          
-            <textarea readonly style="display:none" id="xat" rows="30" cols="100"></textarea>
-
-            </form>
+        <div id="xat" style="display:none"></div>
+        <div id="llista" style="display:none">
+            <ul class="list">  
+                <li>Usuaris:</li>
+            </ul>
         </div>
-
-        <!-- TextArea del JList on introduïm els usuaris -->
-         <div class="llista">
-          <textarea readonly style="display:none" id="llistaUsuaris" rows="30" cols="10"></textarea>
-        </div>
-      <br>
   </body>
 </html>

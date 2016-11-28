@@ -1,0 +1,42 @@
+body { background-color: greenyellow; }
+#xat {
+    float: left;
+    display: -webkit-flex;
+    display: flex;
+    overflow: auto;
+    background-color: white;
+    width: 45%;
+    height: 450px;
+    margin: 0% 0% 0% 20%;
+    border-color: black;
+    border: solid;
+    border-radius: 4px;
+    border-width: 2px 2px 2px 2px;    
+    padding: 1% 0% 0% 1%;
+    text-align: left;
+}
+#llista {
+    float:right;
+    display: -webkit-flex;
+    display: flex;
+    overflow: auto;
+    background-color: white;
+    width: 6%;
+    height: 450px;
+    margin: 0% 25% 0% 0%;
+    border-color: black;
+    border: solid;
+    border-radius: 4px;
+    border-width: 2px 2px 2px 2px;
+    text-align: left;
+    padding: 1% 0% 0% 1%;
+}
+ul {
+    padding: 0% 0% 0% 0%;
+    list-style-type: none;
+    display: inline;
+}
+p {
+    padding: 0;
+    margin: 0;
+}

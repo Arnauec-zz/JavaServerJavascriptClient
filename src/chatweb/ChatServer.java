@@ -27,33 +27,23 @@ import org.java_websocket.server.WebSocketServer;
 
 public class ChatServer extends WebSocketServer {
     
-    // ConcurrentHashMap per guardar les connexions i el seu iterador.
-    private ConcurrentHashMap<WebSocket, String> connexions = new ConcurrentHashMap<>();
+    // ConcurrentHashMap to save the connections.
+    private ConcurrentHashMap<WebSocket, String> connections = new ConcurrentHashMap<>();
     private Iterator<String> iterator;
-    
-    // Inicialitza un servidor en el port especificat.
+    // Initialization of the server
     public ChatServer(int port) throws UnknownHostException {
         super(new InetSocketAddress(port));
     }
-
     public ChatServer(InetSocketAddress address) {
         super(address);
     }
-    
-    
     public static void main(String[] args) throws InterruptedException, IOException {
-
-        int port = 50000; // 843 flash policy port
-        
-        // Inicialitzem el servidor
+        int port = 50000; 
         ChatServer s = new ChatServer(port);
         s.start();
-        
-        System.out.println("Hem iniciat el servidor en el port: " + s.getPort());
+        System.out.println("The server has been started on port: " + s.getPort());
     }
-    
-    
-    // Envia un missatge a tots els clients
+    // Sends a message to all the clients
     public void sendToAll(String text) {
         Collection<WebSocket> con = connections();
         synchronized (con) {
@@ -62,41 +52,29 @@ public class ChatServer extends WebSocketServer {
             }
         }
     }
-    
     public void onOpen(WebSocket conn, ClientHandshake handshake) {
-        
-        // Quan s'obre una connexió iterem el HashMap i enviem a tots els usuaris existents
-        // que tenim un nou usuari connectat amb nom d'usuari xxxx
-        
-        iterator = connexions.values().iterator();
+        // Actions to perform whenever a connection is opened.
+        System.out.println("Tenim una nova connexió");
+        iterator = connections.values().iterator();
         while (iterator.hasNext()) {
             conn.send("/newuser " + iterator.next());
         }
     }
 
     public void onClose(WebSocket conn, int code, String reason, boolean remote) {
-        
-        // Quan es tanca una connexió, esborrem la connexió del HashMap i enviem
-        // un missatge a tots els usuaris connectats amb la comana /deleteuser xxxx
-        // per tal de que l'esborrin del seu JList i també els enviem un missatge
-        // normal informant-los que l'usuari h deixat la sala.
-        
-        String str = connexions.get(conn);
-        connexions.remove(conn);
+        // Actions to perform whenever a connection is closed
+        String str = connections.get(conn);
+        connections.remove(conn);
         this.sendToAll("/deleteuser " + str);
-        this.sendToAll("En/La " + str + " ha sortit de la sala!");
-        System.out.println("En/La " + str + " ha sortit de la sala!");
+        this.sendToAll(str + " has left the room!");
+        System.out.println(str + " has left the room!");
     }
 
     public void onMessage(WebSocket conn, String message) {
-        
-        // Quan rebem un missatge nou, si el missatge conté /newuser, és a dir,
-        // és una comana per afegir un usuari al HashMap, l'afegim, si no, 
-        // rebotem el missatge a tots els usuaris.
-        
+        // Actions to perform whenever a message is received
         if (message.contains("/newuser ")) {
             String[] str = message.split(" ");
-            connexions.put(conn, str[1]);
+            connections.put(conn, str[1]);
             this.sendToAll(message);
         } else {
             this.sendToAll(message);
